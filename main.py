@@ -40,7 +40,11 @@ class FollowersIDScraper:
         return followers_id
 
     def get_user_id(self, username):
-        users = self.clubhouse.search_users(username)['users']  # Search for a username and get the list of results
+        users = self.clubhouse.search_users(username)  # Search for a username
+        if 'users' not in users:
+            return None
+
+        users = users['users']  # Get the list of results
         for user in users:
             if user['username'] == username:  # If the needed username is the same as the result, return the user's id
                 return user['user_id']
@@ -76,7 +80,9 @@ class UsernameChecker:
         self.clubhouse.__init__(user_id, user_token)
 
     def user_exists(self, username):
-        users = self.clubhouse.search_users(username)['users']
+        users = self.clubhouse.search_users(username)
+        if 'users' not in users:
+            return False
         return any(user['username'] == username for user in users)
 
     def check_usernames_existence(self, usernames: list = None, username_file: str = None,
@@ -85,14 +91,14 @@ class UsernameChecker:
             with open(username_file) as usernames:
                 with open(output_file, 'a+') as output:
                     for username in usernames:
-                        if self.user_exists(username.strip()):
-                            print(f'{colorama.Fore.GREEN}User {username} exists!')
+                        if not self.user_exists(username.strip()):
+                            print(f'{colorama.Fore.GREEN}User {username} does not exists!')
                             output.write(username)
         else:
             with open(output_file, 'a+') as output:
                 for username in usernames:
-                    if self.user_exists(username.strip()):
-                        print(f'{colorama.Fore.GREEN}User {username} exists!')
+                    if not self.user_exists(username.strip()):
+                        print(f'{colorama.Fore.GREEN}User {username} does not exists!')
                         output.write(username)
 
 
@@ -109,5 +115,6 @@ if __name__ == '__main__':
 
     else:
         user_checker = UsernameChecker()
+        user_checker.login()
         users_filename = input('Enter the filename with usernames: ')
         user_checker.check_usernames_existence(username_file=users_filename)
