@@ -79,11 +79,17 @@ class UsernameChecker:
         user_token = str(authorization_json['auth_token'])
         self.clubhouse.__init__(user_id, user_token)
 
-    def user_exists(self, username):
+    def is_user_taken(self, username):
         users = self.clubhouse.search_users(username)
         if 'users' not in users:
             return False
-        return any(user['username'] == username for user in users)
+
+        users = users['users']
+        for user in users:
+            if user['username'] == username:
+                return True
+        return False
+        # return any(user['username'] == username for user in users)
 
     def check_usernames_existence(self, usernames: list = None, username_file: str = None,
                                   output_file: str = 'available_users.txt'):
@@ -91,13 +97,13 @@ class UsernameChecker:
             with open(username_file) as usernames:
                 with open(output_file, 'a+') as output:
                     for username in usernames:
-                        if not self.user_exists(username.strip()):
+                        if not self.is_user_taken(username.strip()):
                             print(f'{colorama.Fore.GREEN}User {username} does not exists!')
                             output.write(username)
         else:
             with open(output_file, 'a+') as output:
                 for username in usernames:
-                    if not self.user_exists(username.strip()):
+                    if not self.is_user_taken(username.strip()):
                         print(f'{colorama.Fore.GREEN}User {username} does not exists!')
                         output.write(username)
 
